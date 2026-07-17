@@ -17,6 +17,10 @@ import {
 } from "@/components/dashboard/dashboard-primitives";
 
 export const Route = createFileRoute("/_authenticated/dashboard/homeowner")({
+  beforeLoad: ({ context }) => {
+    const role = (context as { role?: string }).role;
+    if (role === "trade") throw redirect({ to: "/dashboard/trade" });
+  },
   component: HomeownerDashboard,
 });
 
