@@ -83,6 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Sign in as a homeowner or trade professional." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Homeowner + Trade Portal" },
+      { name: "twitter:description", content: "Sign in as a homeowner or trade professional." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ee81dcb5-950e-4b94-bce9-afced91d989f/id-preview-873684a7--62d1cbdb-755a-4398-80f2-598e276065da.lovable.app-1784298727411.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ee81dcb5-950e-4b94-bce9-afced91d989f/id-preview-873684a7--62d1cbdb-755a-4398-80f2-598e276065da.lovable.app-1784298727411.png" },
     ],
     links: [
       {
