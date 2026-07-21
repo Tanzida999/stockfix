@@ -254,7 +254,7 @@ function Hero({ categories }: { categories: LiveCategory[] }) {
                   <SelectValue placeholder="What do you need?" />
                 </SelectTrigger>
                 <SelectContent>
-                  {liveCategories.map((c) => (
+                  {categories.map((c) => (
                     <SelectItem key={c.slug} value={c.slug}>
                       {c.label}
                     </SelectItem>
