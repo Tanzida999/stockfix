@@ -298,7 +298,7 @@ function Hero({ categories }: { categories: LiveCategory[] }) {
   );
 }
 
-function PopularTrades() {
+function PopularTrades({ categories }: { categories: LiveCategory[] }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
       <div className="mb-8 flex flex-col gap-2 sm:mb-10">
@@ -309,7 +309,7 @@ function PopularTrades() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-        {liveCategories.map((c) => (
+        {categories.map((c) => (
           <a
             key={c.slug}
             href={`/search?category=${c.slug}`}
