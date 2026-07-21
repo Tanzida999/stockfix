@@ -187,15 +187,37 @@ function Header() {
   );
 }
 
-function Hero() {
-  const [category, setCategory] = useState("plumber");
+function Hero({ categories }: { categories: LiveCategory[] }) {
+  const [category, setCategory] = useState<string>("");
   const [postcode, setPostcode] = useState("");
+  const [postcodeError, setPostcodeError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  useEffect(() => {
+    if (!category && categories.length > 0) setCategory(categories[0].slug);
+  }, [categories, category]);
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setPostcodeError(null);
+    if (!postcode.trim()) {
+      setPostcodeError("Please enter a postcode.");
+      return;
+    }
+    setSubmitting(true);
+    const { data, error } = await supabase.rpc("normalise_outward", {
+      input: postcode,
+    });
+    setSubmitting(false);
+    if (error || !data) {
+      setPostcodeError(
+        "We don't recognise that postcode — please check and try again.",
+      );
+      return;
+    }
     const params = new URLSearchParams();
     if (category) params.set("category", category);
-    if (postcode.trim()) params.set("postcode", postcode.trim());
+    params.set("postcode", data);
     window.location.href = `/search?${params.toString()}`;
   };
 
