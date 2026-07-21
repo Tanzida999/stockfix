@@ -267,21 +267,31 @@ function Hero({ categories }: { categories: LiveCategory[] }) {
               <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
               <Input
                 value={postcode}
-                onChange={(e) => setPostcode(e.target.value)}
+                onChange={(e) => {
+                  setPostcode(e.target.value);
+                  if (postcodeError) setPostcodeError(null);
+                }}
                 placeholder="Postcode"
                 className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                 aria-label="Postcode"
+                aria-invalid={postcodeError ? true : undefined}
               />
             </div>
 
             <Button
               type="submit"
+              disabled={submitting}
               className="h-11 gap-2 bg-[oklch(0.62_0.16_45)] px-6 text-white hover:bg-[oklch(0.56_0.16_45)] sm:h-auto"
             >
               <Search className="h-4 w-4" />
-              Search
+              {submitting ? "Checking…" : "Search"}
             </Button>
           </div>
+          {postcodeError && (
+            <p className="mt-3 px-1 text-sm text-[oklch(0.5_0.18_25)]" role="alert">
+              {postcodeError}
+            </p>
+          )}
         </form>
       </div>
     </section>
