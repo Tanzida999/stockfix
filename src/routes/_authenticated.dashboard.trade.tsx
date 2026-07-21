@@ -88,15 +88,11 @@ function TradeDashboard() {
 
       {active === "profile" && (
         <>
-          <PageHeader title="My Profile" description="Your public business profile." />
-          <Section title="Business profile">
-            <EmptyState
-              icon={UserCircle}
-              title="Set up your business profile"
-              description="Add your business details, services, and coverage area so homeowners can find you. We'll build this out in a later step."
-              actionLabel="Set up profile"
-            />
-          </Section>
+          <PageHeader
+            title="My Profile"
+            description="Your public business profile. Homeowners see this once you publish."
+          />
+          <TradeProfileEditor userId={user.id} />
         </>
       )}
 
