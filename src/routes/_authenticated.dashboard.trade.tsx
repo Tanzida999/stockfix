@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/dashboard-primitives";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { TradeProfileEditor } from "@/components/dashboard/trade-profile-editor";
 
 export const Route = createFileRoute("/_authenticated/dashboard/trade")({
   beforeLoad: ({ context }) => {
