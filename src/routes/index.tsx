@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type ComponentType, type FormEvent } from "react";
 import {
   Wrench,
   Zap,
@@ -29,6 +29,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,11 +50,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const liveCategories = [
-  { slug: "plumber", label: "Plumber", icon: Wrench },
-  { slug: "electrician", label: "Electrician", icon: Zap },
-  { slug: "gas-heating-engineer", label: "Gas / Heating Engineer", icon: Flame },
-];
+type LiveCategory = { slug: string; label: string; icon: ComponentType<{ className?: string }> };
+
+const iconMap: Record<string, ComponentType<{ className?: string }>> = {
+  wrench: Wrench,
+  zap: Zap,
+  flame: Flame,
+};
 
 const comingSoonCategories = [
   { slug: "roofer", label: "Roofer", icon: Home },
@@ -62,12 +65,36 @@ const comingSoonCategories = [
 ];
 
 function Landing() {
+  const [categories, setCategories] = useState<LiveCategory[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("categories")
+      .select("name, slug, icon, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+        setCategories(
+          data.map((c: { name: string; slug: string; icon: string | null }) => ({
+            slug: c.slug,
+            label: c.name,
+            icon: (c.icon && iconMap[c.icon]) || Wrench,
+          })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[oklch(0.985_0.01_75)] text-foreground">
       <Header />
       <main>
-        <Hero />
-        <PopularTrades />
+        <Hero categories={categories} />
+        <PopularTrades categories={categories} />
         <TrustSection />
         <HowItWorks />
         <TradeRecruitment />
@@ -160,15 +187,37 @@ function Header() {
   );
 }
 
-function Hero() {
-  const [category, setCategory] = useState("plumber");
+function Hero({ categories }: { categories: LiveCategory[] }) {
+  const [category, setCategory] = useState<string>("");
   const [postcode, setPostcode] = useState("");
+  const [postcodeError, setPostcodeError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  useEffect(() => {
+    if (!category && categories.length > 0) setCategory(categories[0].slug);
+  }, [categories, category]);
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setPostcodeError(null);
+    if (!postcode.trim()) {
+      setPostcodeError("Please enter a postcode.");
+      return;
+    }
+    setSubmitting(true);
+    const { data, error } = await supabase.rpc("normalise_outward", {
+      input: postcode,
+    });
+    setSubmitting(false);
+    if (error || !data) {
+      setPostcodeError(
+        "We don't recognise that postcode — please check and try again.",
+      );
+      return;
+    }
     const params = new URLSearchParams();
     if (category) params.set("category", category);
-    if (postcode.trim()) params.set("postcode", postcode.trim());
+    params.set("postcode", data);
     window.location.href = `/search?${params.toString()}`;
   };
 
@@ -205,7 +254,7 @@ function Hero() {
                   <SelectValue placeholder="What do you need?" />
                 </SelectTrigger>
                 <SelectContent>
-                  {liveCategories.map((c) => (
+                  {categories.map((c) => (
                     <SelectItem key={c.slug} value={c.slug}>
                       {c.label}
                     </SelectItem>
@@ -218,28 +267,38 @@ function Hero() {
               <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
               <Input
                 value={postcode}
-                onChange={(e) => setPostcode(e.target.value)}
+                onChange={(e) => {
+                  setPostcode(e.target.value);
+                  if (postcodeError) setPostcodeError(null);
+                }}
                 placeholder="Postcode"
                 className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                 aria-label="Postcode"
+                aria-invalid={postcodeError ? true : undefined}
               />
             </div>
 
             <Button
               type="submit"
+              disabled={submitting}
               className="h-11 gap-2 bg-[oklch(0.62_0.16_45)] px-6 text-white hover:bg-[oklch(0.56_0.16_45)] sm:h-auto"
             >
               <Search className="h-4 w-4" />
-              Search
+              {submitting ? "Checking…" : "Search"}
             </Button>
           </div>
+          {postcodeError && (
+            <p className="mt-3 px-1 text-sm text-[oklch(0.5_0.18_25)]" role="alert">
+              {postcodeError}
+            </p>
+          )}
         </form>
       </div>
     </section>
   );
 }
 
-function PopularTrades() {
+function PopularTrades({ categories }: { categories: LiveCategory[] }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
       <div className="mb-8 flex flex-col gap-2 sm:mb-10">
@@ -250,7 +309,7 @@ function PopularTrades() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-        {liveCategories.map((c) => (
+        {categories.map((c) => (
           <a
             key={c.slug}
             href={`/search?category=${c.slug}`}
