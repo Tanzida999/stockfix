@@ -70,7 +70,7 @@ function TradeDashboard() {
                 <span className="text-sm text-muted-foreground">
                   Homeowners can only find you once your business profile is set up.
                 </span>
-                <Button size="sm" className="shrink-0">
+                <Button size="sm" className="shrink-0" onClick={() => setActive("profile")}>
                   Complete profile
                 </Button>
               </AlertDescription>
