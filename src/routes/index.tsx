@@ -65,12 +65,36 @@ const comingSoonCategories = [
 ];
 
 function Landing() {
+  const [categories, setCategories] = useState<LiveCategory[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("categories")
+      .select("name, slug, icon, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+        setCategories(
+          data.map((c: { name: string; slug: string; icon: string | null }) => ({
+            slug: c.slug,
+            label: c.name,
+            icon: (c.icon && iconMap[c.icon]) || Wrench,
+          })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[oklch(0.985_0.01_75)] text-foreground">
       <Header />
       <main>
-        <Hero />
-        <PopularTrades />
+        <Hero categories={categories} />
+        <PopularTrades categories={categories} />
         <TrustSection />
         <HowItWorks />
         <TradeRecruitment />
