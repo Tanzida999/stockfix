@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
 
 function TradeDashboard() {
   const { user } = Route.useRouteContext() as {
-    user: { email?: string; user_metadata?: { full_name?: string } };
+    user: { id: string; email?: string; user_metadata?: { full_name?: string } };
   };
   const name =
     user.user_metadata?.full_name?.trim() ||
