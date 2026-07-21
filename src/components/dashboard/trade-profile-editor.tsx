@@ -275,7 +275,7 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
               id="business_name"
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="e.g. Smith &amp; Sons Plumbing"
+              placeholder="e.g. Smith & Sons Plumbing"
             />
           </div>
           <div className="grid gap-2">
@@ -448,7 +448,7 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
         <Button onClick={() => save(true)} disabled={saving || uploading}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           <span className={saving ? "ml-2" : ""}>
-            {published ? "Save &amp; keep published" : "Publish profile"}
+            {published ? "Save & keep published" : "Publish profile"}
           </span>
         </Button>
       </div>
