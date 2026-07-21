@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/dashboard-primitives";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { TradeProfileEditor } from "@/components/dashboard/trade-profile-editor";
 
 export const Route = createFileRoute("/_authenticated/dashboard/trade")({
   beforeLoad: ({ context }) => {
@@ -37,7 +38,7 @@ const navItems: NavItem[] = [
 
 function TradeDashboard() {
   const { user } = Route.useRouteContext() as {
-    user: { email?: string; user_metadata?: { full_name?: string } };
+    user: { id: string; email?: string; user_metadata?: { full_name?: string } };
   };
   const name =
     user.user_metadata?.full_name?.trim() ||
@@ -69,7 +70,7 @@ function TradeDashboard() {
                 <span className="text-sm text-muted-foreground">
                   Homeowners can only find you once your business profile is set up.
                 </span>
-                <Button size="sm" className="shrink-0">
+                <Button size="sm" className="shrink-0" onClick={() => setActive("profile")}>
                   Complete profile
                 </Button>
               </AlertDescription>
@@ -87,15 +88,11 @@ function TradeDashboard() {
 
       {active === "profile" && (
         <>
-          <PageHeader title="My Profile" description="Your public business profile." />
-          <Section title="Business profile">
-            <EmptyState
-              icon={UserCircle}
-              title="Set up your business profile"
-              description="Add your business details, services, and coverage area so homeowners can find you. We'll build this out in a later step."
-              actionLabel="Set up profile"
-            />
-          </Section>
+          <PageHeader
+            title="My Profile"
+            description="Your public business profile. Homeowners see this once you publish."
+          />
+          <TradeProfileEditor userId={user.id} />
         </>
       )}
 
