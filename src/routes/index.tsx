@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type ComponentType, type FormEvent } from "react";
 import {
   Wrench,
   Zap,
@@ -29,6 +29,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,11 +50,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const liveCategories = [
-  { slug: "plumber", label: "Plumber", icon: Wrench },
-  { slug: "electrician", label: "Electrician", icon: Zap },
-  { slug: "gas-heating-engineer", label: "Gas / Heating Engineer", icon: Flame },
-];
+type LiveCategory = { slug: string; label: string; icon: ComponentType<{ className?: string }> };
+
+const iconMap: Record<string, ComponentType<{ className?: string }>> = {
+  wrench: Wrench,
+  zap: Zap,
+  flame: Flame,
+};
 
 const comingSoonCategories = [
   { slug: "roofer", label: "Roofer", icon: Home },
