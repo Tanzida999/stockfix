@@ -1,20 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { ArrowLeft, MapPin, Loader2, SearchX } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
-const searchSchema = z.object({
-  category: fallback(z.string(), "").default(""),
-  postcode: fallback(z.string(), "").default(""),
-});
+type SearchParams = { category: string; postcode: string };
 
 export const Route = createFileRoute("/search")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>): SearchParams => ({
+    category: typeof search.category === "string" ? search.category : "",
+    postcode: typeof search.postcode === "string" ? search.postcode : "",
+  }),
   head: () => ({
     meta: [
       { title: "Search verified trades — Stockfix" },
