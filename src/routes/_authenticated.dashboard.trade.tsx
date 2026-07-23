@@ -175,6 +175,17 @@ function TradeDashboard() {
         </>
       )}
 
+      {active === "verification" && (
+        <>
+          <PageHeader
+            title="Verification"
+            description="Submit your trade credentials so we can verify your business. Verified trades earn a badge shown to homeowners."
+          />
+          <CredentialsManager userId={user.id} />
+        </>
+      )}
+
+
       {active === "leads" && (
         <>
           <PageHeader
