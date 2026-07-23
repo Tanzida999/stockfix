@@ -209,9 +209,16 @@ function SearchPage() {
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-lg font-semibold">
-                        {r.business_name || "Unnamed business"}
-                      </h2>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-lg font-semibold">
+                          {r.business_name || "Unnamed business"}
+                        </h2>
+                        {r.is_verified && (
+                          <Badge className="gap-1 bg-emerald-600 text-white hover:bg-emerald-600">
+                            <ShieldCheck className="h-3 w-3" /> Verified
+                          </Badge>
+                        )}
+                      </div>
                       <div className="mt-1 flex flex-wrap gap-1.5">
                         {r.categories.map((c) => (
                           <Badge key={c.slug} variant="secondary">
