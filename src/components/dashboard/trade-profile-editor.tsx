@@ -17,13 +17,20 @@ type TradeProfile = {
   business_name: string | null;
   bio: string | null;
   phone: string | null;
+  contact_email: string | null;
   portfolio_image_urls: string[];
   published: boolean;
 };
 
 const BUCKET = "portfolio";
 
-export function TradeProfileEditor({ userId }: { userId: string }) {
+export function TradeProfileEditor({
+  userId,
+  defaultContactEmail,
+}: {
+  userId: string;
+  defaultContactEmail?: string;
+}) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -37,6 +44,7 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
   const [businessName, setBusinessName] = useState("");
   const [bio, setBio] = useState("");
   const [phone, setPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [portfolio, setPortfolio] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
 
@@ -80,8 +88,11 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
         setBusinessName(profile.business_name ?? "");
         setBio(profile.bio ?? "");
         setPhone(profile.phone ?? "");
+        setContactEmail(profile.contact_email ?? defaultContactEmail ?? "");
         setPortfolio(profile.portfolio_image_urls ?? []);
         setPublished(profile.published);
+      } else if (defaultContactEmail) {
+        setContactEmail(defaultContactEmail);
       }
       if (categoriesRes.data) setAllCategories(categoriesRes.data as Category[]);
       if (districtsRes.data) setAllDistricts(districtsRes.data as District[]);
