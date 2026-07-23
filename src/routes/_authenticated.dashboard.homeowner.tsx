@@ -78,8 +78,7 @@ function HomeownerDashboard() {
             <EmptyState
               icon={Briefcase}
               title="You haven't posted any jobs yet"
-              description="Post a job to start getting quotes from local trades."
-              actionLabel="Post a job"
+              description="Job posting is coming soon. In the meantime, search for trades and request a callback directly."
             />
           </Section>
         </>
@@ -93,7 +92,6 @@ function HomeownerDashboard() {
               icon={Heart}
               title="You haven't saved any trades yet"
               description="Save trades you like so you can quickly reach out when the time comes."
-              actionLabel="Browse trades"
             />
           </Section>
         </>
@@ -107,7 +105,6 @@ function HomeownerDashboard() {
               icon={Star}
               title="You haven't written any reviews yet"
               description="After a completed job, share your experience to help other homeowners."
-              actionLabel="Find a completed job"
             />
           </Section>
         </>

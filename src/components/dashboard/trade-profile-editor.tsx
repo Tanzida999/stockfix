@@ -109,7 +109,7 @@ export function TradeProfileEditor({
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, defaultContactEmail]);
 
   const filteredDistricts = useMemo(() => {
     const q = districtFilter.trim().toLowerCase();
@@ -166,6 +166,7 @@ export function TradeProfileEditor({
         business_name: businessName.trim() || null,
         bio: bio.trim() || null,
         phone: phone.trim() || null,
+        contact_email: contactEmail.trim() || null,
         portfolio_image_urls: portfolio,
         published: publishedValue,
       },
@@ -297,6 +298,19 @@ export function TradeProfileEditor({
               onChange={(e) => setPhone(e.target.value)}
               placeholder="e.g. 07123 456789"
             />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="contact_email">Contact email (for lead notifications)</Label>
+            <Input
+              id="contact_email"
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+            <p className="text-xs text-muted-foreground">
+              We'll email you here when a homeowner requests a callback.
+            </p>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="bio">Bio</Label>
