@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicNotifyLeadRouteImport } from './routes/api.public.notify-lead'
 import { Route as AuthenticatedDashboardTradeRouteImport } from './routes/_authenticated.dashboard.trade'
 import { Route as AuthenticatedDashboardHomeownerRouteImport } from './routes/_authenticated.dashboard.homeowner'
+import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated.dashboard.admin'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -65,6 +66,12 @@ const AuthenticatedDashboardHomeownerRoute =
     path: '/dashboard/homeowner',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDashboardAdminRoute =
+  AuthenticatedDashboardAdminRouteImport.update({
+    id: '/dashboard/admin',
+    path: '/dashboard/admin',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
@@ -94,6 +103,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/_authenticated/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/_authenticated/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/dashboard/admin'
     | '/dashboard/homeowner'
     | '/dashboard/trade'
     | '/api/public/notify-lead'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/dashboard/admin'
     | '/dashboard/homeowner'
     | '/dashboard/trade'
     | '/api/public/notify-lead'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/homeowner'
     | '/_authenticated/dashboard/trade'
     | '/api/public/notify-lead'
@@ -207,15 +220,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardHomeownerRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/dashboard/admin': {
+      id: '/_authenticated/dashboard/admin'
+      path: '/dashboard/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
   AuthenticatedDashboardHomeownerRoute: typeof AuthenticatedDashboardHomeownerRoute
   AuthenticatedDashboardTradeRoute: typeof AuthenticatedDashboardTradeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
   AuthenticatedDashboardHomeownerRoute: AuthenticatedDashboardHomeownerRoute,
   AuthenticatedDashboardTradeRoute: AuthenticatedDashboardTradeRoute,
 }
