@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Loader2, SearchX } from "lucide-react";
+import { ArrowLeft, MapPin, Loader2, SearchX, Phone } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { LeadContactModal } from "@/components/lead-contact-modal";
 
 type SearchParams = { category: string; postcode: string };
 
@@ -38,14 +39,15 @@ type Result = {
 function SearchPage() {
   const { category, postcode } = Route.useSearch();
   const [loading, setLoading] = useState(true);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string | null>(null);
   const [results, setResults] = useState<Result[]>([]);
+  const [contactTarget, setContactTarget] = useState<Result | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      // Resolve category
       const catRes = await supabase
         .from("categories")
         .select("id, name, slug")
@@ -54,6 +56,7 @@ function SearchPage() {
       if (cancelled) return;
       const cat = catRes.data as { id: string; name: string; slug: string } | null;
       setCategoryName(cat?.name ?? null);
+      setCategoryId(cat?.id ?? null);
 
       if (!cat || !postcode) {
         setResults([]);
@@ -61,7 +64,6 @@ function SearchPage() {
         return;
       }
 
-      // Trades matching the category
       const tpcRes = await supabase
         .from("trade_profile_categories")
         .select("trade_user_id")
@@ -73,7 +75,6 @@ function SearchPage() {
         ),
       );
 
-      // Trades covering the postcode
       const tpaRes = await supabase
         .from("trade_profile_areas")
         .select("trade_user_id")
@@ -200,10 +201,13 @@ function SearchPage() {
         ) : (
           <div className="grid gap-4">
             {results.map((r) => (
-              <Card key={r.user_id}>
+              <Card
+                key={r.user_id}
+                className="transition hover:-translate-y-0.5 hover:shadow-md"
+              >
                 <CardContent className="p-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
                       <h2 className="truncate text-lg font-semibold">
                         {r.business_name || "Unnamed business"}
                       </h2>
@@ -219,11 +223,20 @@ function SearchPage() {
                           {r.bio}
                         </p>
                       )}
+                      <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
+                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>Covers: {r.areas.join(", ") || "—"}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
-                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span>Covers: {r.areas.join(", ") || "—"}</span>
+                    <div className="shrink-0">
+                      <Button
+                        onClick={() => setContactTarget(r)}
+                        className="w-full sm:w-auto"
+                      >
+                        <Phone className="mr-2 h-4 w-4" />
+                        Request a callback
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -231,6 +244,18 @@ function SearchPage() {
           </div>
         )}
       </main>
+
+      {contactTarget && (
+        <LeadContactModal
+          open={contactTarget !== null}
+          onOpenChange={(o) => {
+            if (!o) setContactTarget(null);
+          }}
+          tradeUserId={contactTarget.user_id}
+          tradeName={contactTarget.business_name || "this trade"}
+          categoryId={categoryId}
+        />
+      )}
     </div>
   );
 }
