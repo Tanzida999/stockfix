@@ -11,6 +11,7 @@ import {
   Mail,
   Phone,
   MessageSquare,
+  ShieldCheck,
 } from "lucide-react";
 import { DashboardLayout, type NavItem } from "@/components/dashboard/dashboard-layout";
 import {
