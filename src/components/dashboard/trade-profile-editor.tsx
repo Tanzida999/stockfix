@@ -17,13 +17,20 @@ type TradeProfile = {
   business_name: string | null;
   bio: string | null;
   phone: string | null;
+  contact_email: string | null;
   portfolio_image_urls: string[];
   published: boolean;
 };
 
 const BUCKET = "portfolio";
 
-export function TradeProfileEditor({ userId }: { userId: string }) {
+export function TradeProfileEditor({
+  userId,
+  defaultContactEmail,
+}: {
+  userId: string;
+  defaultContactEmail?: string;
+}) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -37,6 +44,7 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
   const [businessName, setBusinessName] = useState("");
   const [bio, setBio] = useState("");
   const [phone, setPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [portfolio, setPortfolio] = useState<string[]>([]);
   const [published, setPublished] = useState(false);
 
@@ -80,8 +88,11 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
         setBusinessName(profile.business_name ?? "");
         setBio(profile.bio ?? "");
         setPhone(profile.phone ?? "");
+        setContactEmail(profile.contact_email ?? defaultContactEmail ?? "");
         setPortfolio(profile.portfolio_image_urls ?? []);
         setPublished(profile.published);
+      } else if (defaultContactEmail) {
+        setContactEmail(defaultContactEmail);
       }
       if (categoriesRes.data) setAllCategories(categoriesRes.data as Category[]);
       if (districtsRes.data) setAllDistricts(districtsRes.data as District[]);
@@ -98,7 +109,7 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, defaultContactEmail]);
 
   const filteredDistricts = useMemo(() => {
     const q = districtFilter.trim().toLowerCase();
@@ -155,6 +166,7 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
         business_name: businessName.trim() || null,
         bio: bio.trim() || null,
         phone: phone.trim() || null,
+        contact_email: contactEmail.trim() || null,
         portfolio_image_urls: portfolio,
         published: publishedValue,
       },
@@ -286,6 +298,19 @@ export function TradeProfileEditor({ userId }: { userId: string }) {
               onChange={(e) => setPhone(e.target.value)}
               placeholder="e.g. 07123 456789"
             />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="contact_email">Contact email (for lead notifications)</Label>
+            <Input
+              id="contact_email"
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+            <p className="text-xs text-muted-foreground">
+              We'll email you here when a homeowner requests a callback.
+            </p>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="bio">Bio</Label>

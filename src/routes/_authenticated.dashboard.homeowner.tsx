@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Briefcase,
   Heart,
   Star,
-  Plus,
   Search,
 } from "lucide-react";
 import { DashboardLayout, type NavItem } from "@/components/dashboard/dashboard-layout";
@@ -15,6 +14,8 @@ import {
   Section,
   StatCard,
 } from "@/components/dashboard/dashboard-primitives";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authenticated/dashboard/homeowner")({
   beforeLoad: ({ context }) => {
@@ -60,14 +61,21 @@ function HomeownerDashboard() {
             <StatCard title="Saved trades" value={0} hint="Nothing saved yet" icon={Heart} />
             <StatCard title="Reviews written" value={0} hint="Share your experience" icon={Star} />
           </div>
-          <div className="mt-6">
-            <EmptyState
-              icon={Plus}
-              title="Post your first job"
-              description="Tell trusted local trades what you need done and start receiving quotes."
-              actionLabel="Post your first job"
-            />
-          </div>
+          <Card className="mt-6 border-primary/20 bg-primary/5 transition hover:shadow-md">
+            <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-base font-semibold">Find a verified trade near you</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Search by category and postcode — every trade is properly checked before it's listed.
+                </p>
+              </div>
+              <Button asChild className="shrink-0">
+                <Link to="/">
+                  <Search className="mr-2 h-4 w-4" /> Search trades
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </>
       )}
 
@@ -78,8 +86,7 @@ function HomeownerDashboard() {
             <EmptyState
               icon={Briefcase}
               title="You haven't posted any jobs yet"
-              description="Post a job to start getting quotes from local trades."
-              actionLabel="Post a job"
+              description="Job posting is coming soon. In the meantime, search for trades and request a callback directly."
             />
           </Section>
         </>
@@ -93,7 +100,6 @@ function HomeownerDashboard() {
               icon={Heart}
               title="You haven't saved any trades yet"
               description="Save trades you like so you can quickly reach out when the time comes."
-              actionLabel="Browse trades"
             />
           </Section>
         </>
@@ -107,7 +113,6 @@ function HomeownerDashboard() {
               icon={Star}
               title="You haven't written any reviews yet"
               description="After a completed job, share your experience to help other homeowners."
-              actionLabel="Find a completed job"
             />
           </Section>
         </>

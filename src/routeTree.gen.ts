@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicNotifyLeadRouteImport } from './routes/api.public.notify-lead'
 import { Route as AuthenticatedDashboardTradeRouteImport } from './routes/_authenticated.dashboard.trade'
 import { Route as AuthenticatedDashboardHomeownerRouteImport } from './routes/_authenticated.dashboard.homeowner'
 
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNotifyLeadRoute = ApiPublicNotifyLeadRouteImport.update({
+  id: '/api/public/notify-lead',
+  path: '/api/public/notify-lead',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardTradeRoute =
   AuthenticatedDashboardTradeRouteImport.update({
     id: '/dashboard/trade',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
+  '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
+  '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/_authenticated/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
+  '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard/homeowner'
     | '/dashboard/trade'
+    | '/api/public/notify-lead'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard/homeowner'
     | '/dashboard/trade'
+    | '/api/public/notify-lead'
   id:
     | '__root__'
     | '/'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/dashboard/homeowner'
     | '/_authenticated/dashboard/trade'
+    | '/api/public/notify-lead'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicNotifyLeadRoute: typeof ApiPublicNotifyLeadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -173,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/notify-lead': {
+      id: '/api/public/notify-lead'
+      path: '/api/public/notify-lead'
+      fullPath: '/api/public/notify-lead'
+      preLoaderRoute: typeof ApiPublicNotifyLeadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard/trade': {
       id: '/_authenticated/dashboard/trade'
       path: '/dashboard/trade'
@@ -211,6 +231,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
+  ApiPublicNotifyLeadRoute: ApiPublicNotifyLeadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
