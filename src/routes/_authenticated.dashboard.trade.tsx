@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TradeProfileEditor } from "@/components/dashboard/trade-profile-editor";
+import { CredentialsManager } from "@/components/dashboard/credentials-manager";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/_authenticated/dashboard/trade")({
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/trade")({
 const navItems: NavItem[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "profile", label: "My Profile", icon: UserCircle },
+  { key: "verification", label: "Verification", icon: ShieldCheck },
   { key: "leads", label: "Leads", icon: Inbox },
   { key: "reviews", label: "Reviews", icon: Star },
 ];
