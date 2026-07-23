@@ -32,6 +32,7 @@ type Result = {
   bio: string | null;
   phone: string | null;
   portfolio_image_urls: string[];
+  is_verified: boolean;
   categories: { name: string; slug: string }[];
   areas: string[];
 };
