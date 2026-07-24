@@ -47,6 +47,7 @@ type PendingCred = {
 };
 
 function AdminPage() {
+  const navigate = useNavigate();
   const { user, roles } = Route.useRouteContext() as {
     user: { email?: string; user_metadata?: { full_name?: string } };
     roles?: AppRole[];
@@ -107,7 +108,9 @@ function AdminPage() {
       userName={name}
       navItems={navItems}
       activeKey="queue"
-      onNavigate={() => {}}
+      onNavigate={(key) => {
+        if (key === "users") navigate({ to: "/dashboard/admin/users" });
+      }}
     >
       <PageHeader
         title="Verification queue"
