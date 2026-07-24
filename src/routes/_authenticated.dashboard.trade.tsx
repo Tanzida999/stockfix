@@ -37,8 +37,9 @@ import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/_authenticated/dashboard/trade")({
   beforeLoad: ({ context }) => {
-    const role = (context as { role?: string }).role;
-    if (role !== "trade" && role !== "admin") {
+    const { role, roles } = context as { role?: string; roles?: string[] };
+    const all = roles ?? (role ? [role] : []);
+    if (!all.includes("trade") && !all.includes("admin") && all.length > 0) {
       throw redirect({ to: "/dashboard/homeowner" });
     }
   },
@@ -65,8 +66,9 @@ type Lead = {
 };
 
 function TradeDashboard() {
-  const { user } = Route.useRouteContext() as {
+  const { user, roles } = Route.useRouteContext() as {
     user: { id: string; email?: string; user_metadata?: { full_name?: string } };
+    roles?: import("@/lib/supabase").AppRole[];
   };
   const name =
     user.user_metadata?.full_name?.trim() ||
@@ -113,6 +115,8 @@ function TradeDashboard() {
   return (
     <DashboardLayout
       role="Trade"
+      currentRole="trade"
+      availableRoles={roles ?? []}
       userName={name}
       navItems={navItems}
       activeKey={active}
