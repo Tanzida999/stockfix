@@ -152,24 +152,28 @@ export function DashboardLayout({
               </div>
               <span className="text-sm font-semibold sm:text-base">Stockfix</span>
             </div>
-            <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
-              {role} view
-            </Badge>
+            {hasMultipleRoles ? (
+              <Select value={activeRoleValue} onValueChange={handleRoleSwitch}>
+                <SelectTrigger
+                  className="ml-2 h-7 w-auto gap-1.5 rounded-full border-transparent bg-secondary px-3 py-0 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70"
+                  aria-label="Switch dashboard"
+                >
+                  <SelectValue>{role} view</SelectValue>
+                </SelectTrigger>
+                <SelectContent align="start">
+                  {availableRoles.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {ROLE_TO_LABEL[r]} dashboard
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
+                {role} view
+              </Badge>
+            )}
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
-              {hasMultipleRoles && (
-                <Select value={activeRoleValue} onValueChange={handleRoleSwitch}>
-                  <SelectTrigger className="h-8 w-[140px]">
-                    <SelectValue placeholder="Switch role" />
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                    {availableRoles.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {ROLE_TO_LABEL[r]} dashboard
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
               <div className="hidden text-right sm:block">
                 <div className="text-sm font-medium leading-tight">{userName}</div>
                 <div className="text-xs text-muted-foreground leading-tight">

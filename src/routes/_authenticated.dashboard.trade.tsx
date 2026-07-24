@@ -76,6 +76,7 @@ function TradeDashboard() {
     "there";
   const [active, setActive] = useState("overview");
   const [profile, setProfile] = useState<{ published: boolean; is_verified: boolean } | null>(null);
+  const [credentialCount, setCredentialCount] = useState<number | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
@@ -86,6 +87,14 @@ function TradeDashboard() {
       .eq("user_id", user.id)
       .maybeSingle();
     setProfile(((data as { published: boolean; is_verified: boolean } | null)) ?? null);
+  }, [user.id]);
+
+  const loadCredentials = useCallback(async () => {
+    const { count } = await supabase
+      .from("trade_credentials")
+      .select("id", { count: "exact", head: true })
+      .eq("trade_user_id", user.id);
+    setCredentialCount(count ?? 0);
   }, [user.id]);
 
   const loadLeads = useCallback(async () => {
@@ -101,8 +110,10 @@ function TradeDashboard() {
 
   useEffect(() => {
     loadProfile();
+    loadCredentials();
     loadLeads();
-  }, [loadProfile, loadLeads]);
+  }, [loadProfile, loadCredentials, loadLeads]);
+
 
   async function updateStatus(id: string, status: LeadStatus) {
     setLeads((ls) => ls.map((l) => (l.id === id ? { ...l, status } : l)));
@@ -145,6 +156,21 @@ function TradeDashboard() {
             </Alert>
           )}
 
+          {profile?.published && !profile.is_verified && credentialCount === 0 && (
+            <Alert className="mb-6 border-primary/30 bg-primary/5">
+              <ShieldCheck className="h-4 w-4" />
+              <AlertTitle>Submit a credential to appear in search</AlertTitle>
+              <AlertDescription className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-sm text-muted-foreground">
+                  You haven't submitted any credentials yet. Homeowners only see verified trades in search results.
+                </span>
+                <Button size="sm" className="shrink-0" onClick={() => setActive("verification")}>
+                  Submit credential
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="New leads"
@@ -155,22 +181,26 @@ function TradeDashboard() {
             <StatCard
               title="Profile status"
               value={
-                profile === null
+                profile === null || credentialCount === null
                   ? "…"
-                  : profile.published
-                    ? profile.is_verified
+                  : !profile.published
+                    ? "Incomplete"
+                    : profile.is_verified
                       ? "Published"
-                      : "Published — pending verification"
-                    : "Incomplete"
+                      : credentialCount > 0
+                        ? "Published — pending verification"
+                        : "Published — not yet submitted for verification"
               }
               hint={
-                profile === null
+                profile === null || credentialCount === null
                   ? "Loading"
-                  : profile.published
-                    ? profile.is_verified
+                  : !profile.published
+                    ? "Finish setup"
+                    : profile.is_verified
                       ? "Live on Stockfix"
-                      : "An admin needs to verify your credentials first"
-                    : "Finish setup"
+                      : credentialCount > 0
+                        ? "An admin is reviewing your credentials"
+                        : "Submit a credential in the Verification tab"
               }
               icon={UserCircle}
             />
