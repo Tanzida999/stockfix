@@ -106,6 +106,24 @@ export function DashboardLayout({
       .join("")
       .toUpperCase() || "U";
 
+  const roleSwitcher = hasMultipleRoles ? (
+    <Select value={activeRoleValue} onValueChange={handleRoleSwitch}>
+      <SelectTrigger
+        className="h-7 w-auto min-w-0 gap-1.5 rounded-full border-transparent bg-secondary px-3 py-0 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70"
+        aria-label="Switch dashboard view"
+      >
+        <SelectValue placeholder={`${role} view`} />
+      </SelectTrigger>
+      <SelectContent align="start">
+        {availableRoles.map((r) => (
+          <SelectItem key={r} value={r}>
+            {ROLE_TO_LABEL[r]} dashboard
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ) : null;
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-muted/30">
@@ -117,7 +135,11 @@ export function DashboardLayout({
               </div>
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold">Stockfix</div>
-                <div className="truncate text-xs text-muted-foreground">{role}</div>
+                {hasMultipleRoles ? (
+                  <div className="mt-1">{roleSwitcher}</div>
+                ) : (
+                  <div className="truncate text-xs text-muted-foreground">{role} view</div>
+                )}
               </div>
             </div>
           </SidebarHeader>
@@ -153,21 +175,7 @@ export function DashboardLayout({
               <span className="text-sm font-semibold sm:text-base">Stockfix</span>
             </div>
             {hasMultipleRoles ? (
-              <Select value={activeRoleValue} onValueChange={handleRoleSwitch}>
-                <SelectTrigger
-                  className="ml-2 h-7 w-auto gap-1.5 rounded-full border-transparent bg-secondary px-3 py-0 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70"
-                  aria-label="Switch dashboard"
-                >
-                  <SelectValue>{role} view</SelectValue>
-                </SelectTrigger>
-                <SelectContent align="start">
-                  {availableRoles.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {ROLE_TO_LABEL[r]} dashboard
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="ml-2">{roleSwitcher}</div>
             ) : (
               <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
                 {role} view
