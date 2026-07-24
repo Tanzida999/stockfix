@@ -110,6 +110,7 @@ function TradeDashboard() {
   }
 
   const newLeadCount = leads.filter((l) => l.status === "new").length;
+  const profilePublished = profile?.published ?? false;
   const profileIncomplete = profilePublished === false;
 
   return (
