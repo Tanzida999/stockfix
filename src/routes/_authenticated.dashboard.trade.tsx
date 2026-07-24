@@ -75,17 +75,17 @@ function TradeDashboard() {
     user.email?.split("@")[0] ||
     "there";
   const [active, setActive] = useState("overview");
-  const [profilePublished, setProfilePublished] = useState<boolean | null>(null);
+  const [profile, setProfile] = useState<{ published: boolean; is_verified: boolean } | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
   const loadProfile = useCallback(async () => {
     const { data } = await supabase
       .from("trade_profiles")
-      .select("published")
+      .select("published, is_verified")
       .eq("user_id", user.id)
       .maybeSingle();
-    setProfilePublished(((data as { published: boolean } | null)?.published) ?? false);
+    setProfile(((data as { published: boolean; is_verified: boolean } | null)) ?? null);
   }, [user.id]);
 
   const loadLeads = useCallback(async () => {
@@ -110,6 +110,7 @@ function TradeDashboard() {
   }
 
   const newLeadCount = leads.filter((l) => l.status === "new").length;
+  const profilePublished = profile?.published ?? false;
   const profileIncomplete = profilePublished === false;
 
   return (
@@ -154,13 +155,23 @@ function TradeDashboard() {
             <StatCard
               title="Profile status"
               value={
-                profilePublished === null
+                profile === null
                   ? "…"
-                  : profilePublished
-                    ? "Published"
+                  : profile.published
+                    ? profile.is_verified
+                      ? "Published"
+                      : "Published — pending verification"
                     : "Incomplete"
               }
-              hint={profilePublished ? "Live on Stockfix" : "Finish setup"}
+              hint={
+                profile === null
+                  ? "Loading"
+                  : profile.published
+                    ? profile.is_verified
+                      ? "Live on Stockfix"
+                      : "An admin needs to verify your credentials first"
+                    : "Finish setup"
+              }
               icon={UserCircle}
             />
             <StatCard title="Average rating" value="—" hint="No ratings yet" icon={Star} />
