@@ -22,7 +22,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import type { AppRole } from "@/lib/supabase";
@@ -112,7 +111,7 @@ export function DashboardLayout({
         className="h-7 w-auto min-w-0 gap-1.5 rounded-full border-transparent bg-secondary px-3 py-0 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70"
         aria-label="Switch dashboard view"
       >
-        <SelectValue placeholder={`${role} view`} />
+        <span className="truncate">{ROLE_TO_LABEL[activeRoleValue]} view</span>
       </SelectTrigger>
       <SelectContent align="start">
         {availableRoles.map((r) => (
