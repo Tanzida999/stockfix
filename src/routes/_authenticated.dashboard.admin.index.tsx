@@ -18,7 +18,7 @@ import {
   type CredentialType,
 } from "@/components/dashboard/credentials-manager";
 
-export const Route = createFileRoute("/_authenticated/dashboard/admin")({
+export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
   beforeLoad: ({ context }) => {
     const { role, roles } = context as { role?: string; roles?: string[] };
     const all = roles ?? (role ? [role] : []);
