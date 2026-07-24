@@ -100,7 +100,8 @@ function SearchPage() {
           "user_id, business_name, bio, phone, portfolio_image_urls, is_verified, published",
         )
         .in("user_id", ids)
-        .eq("published", true);
+        .eq("published", true)
+        .eq("is_verified", true);
       if (cancelled) return;
       const profiles =
         (profilesRes.data as Omit<Result, "categories" | "areas">[] | null) ?? [];
