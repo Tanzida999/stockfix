@@ -155,13 +155,23 @@ function TradeDashboard() {
             <StatCard
               title="Profile status"
               value={
-                profilePublished === null
+                profile === null
                   ? "…"
-                  : profilePublished
-                    ? "Published"
+                  : profile.published
+                    ? profile.is_verified
+                      ? "Published"
+                      : "Published — pending verification"
                     : "Incomplete"
               }
-              hint={profilePublished ? "Live on Stockfix" : "Finish setup"}
+              hint={
+                profile === null
+                  ? "Loading"
+                  : profile.published
+                    ? profile.is_verified
+                      ? "Live on Stockfix"
+                      : "An admin needs to verify your credentials first"
+                    : "Finish setup"
+              }
               icon={UserCircle}
             />
             <StatCard title="Average rating" value="—" hint="No ratings yet" icon={Star} />
