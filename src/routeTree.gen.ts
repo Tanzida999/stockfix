@@ -19,6 +19,7 @@ import { Route as ApiPublicNotifyLeadRouteImport } from './routes/api.public.not
 import { Route as AuthenticatedDashboardTradeRouteImport } from './routes/_authenticated.dashboard.trade'
 import { Route as AuthenticatedDashboardHomeownerRouteImport } from './routes/_authenticated.dashboard.homeowner'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated.dashboard.admin'
+import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated.dashboard.admin.users'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -72,6 +73,12 @@ const AuthenticatedDashboardAdminRoute =
     path: '/dashboard/admin',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDashboardAdminUsersRoute =
+  AuthenticatedDashboardAdminUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,10 +86,11 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
+  '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,10 +98,11 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
+  '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,10 +112,11 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
-  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/_authenticated/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/_authenticated/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
+  '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/dashboard/homeowner'
     | '/dashboard/trade'
     | '/api/public/notify-lead'
+    | '/dashboard/admin/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/dashboard/homeowner'
     | '/dashboard/trade'
     | '/api/public/notify-lead'
+    | '/dashboard/admin/users'
   id:
     | '__root__'
     | '/'
@@ -143,6 +155,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/homeowner'
     | '/_authenticated/dashboard/trade'
     | '/api/public/notify-lead'
+    | '/_authenticated/dashboard/admin/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,17 +240,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/dashboard/admin/users': {
+      id: '/_authenticated/dashboard/admin/users'
+      path: '/users'
+      fullPath: '/dashboard/admin/users'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
   }
 }
 
+interface AuthenticatedDashboardAdminRouteChildren {
+  AuthenticatedDashboardAdminUsersRoute: typeof AuthenticatedDashboardAdminUsersRoute
+}
+
+const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
+  {
+    AuthenticatedDashboardAdminUsersRoute:
+      AuthenticatedDashboardAdminUsersRoute,
+  }
+
+const AuthenticatedDashboardAdminRouteWithChildren =
+  AuthenticatedDashboardAdminRoute._addFileChildren(
+    AuthenticatedDashboardAdminRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
   AuthenticatedDashboardHomeownerRoute: typeof AuthenticatedDashboardHomeownerRoute
   AuthenticatedDashboardTradeRoute: typeof AuthenticatedDashboardTradeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
+  AuthenticatedDashboardAdminRoute:
+    AuthenticatedDashboardAdminRouteWithChildren,
   AuthenticatedDashboardHomeownerRoute: AuthenticatedDashboardHomeownerRoute,
   AuthenticatedDashboardTradeRoute: AuthenticatedDashboardTradeRoute,
 }

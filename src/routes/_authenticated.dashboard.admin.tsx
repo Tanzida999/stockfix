@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Loader2, ShieldCheck, ExternalLink, LayoutDashboard } from "lucide-react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { Loader2, ShieldCheck, ExternalLink, LayoutDashboard, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { AppRole } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin")({
 
 const navItems: NavItem[] = [
   { key: "queue", label: "Verification queue", icon: LayoutDashboard },
+  { key: "users", label: "Manage users", icon: Users },
 ];
 
 type PendingCred = {
