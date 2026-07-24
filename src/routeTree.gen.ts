@@ -19,6 +19,7 @@ import { Route as ApiPublicNotifyLeadRouteImport } from './routes/api.public.not
 import { Route as AuthenticatedDashboardTradeRouteImport } from './routes/_authenticated.dashboard.trade'
 import { Route as AuthenticatedDashboardHomeownerRouteImport } from './routes/_authenticated.dashboard.homeowner'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated.dashboard.admin'
+import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated.dashboard.admin.index'
 import { Route as AuthenticatedDashboardAdminUsersRouteImport } from './routes/_authenticated.dashboard.admin.users'
 
 const SignupRoute = SignupRouteImport.update({
@@ -73,6 +74,12 @@ const AuthenticatedDashboardAdminRoute =
     path: '/dashboard/admin',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDashboardAdminIndexRoute =
+  AuthenticatedDashboardAdminIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminUsersRoute =
   AuthenticatedDashboardAdminUsersRouteImport.update({
     id: '/users',
@@ -91,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
+  '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -98,11 +106,11 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
-  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
   '/dashboard/homeowner': typeof AuthenticatedDashboardHomeownerRoute
   '/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
   '/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/trade': typeof AuthenticatedDashboardTradeRoute
   '/api/public/notify-lead': typeof ApiPublicNotifyLeadRoute
   '/_authenticated/dashboard/admin/users': typeof AuthenticatedDashboardAdminUsersRoute
+  '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/dashboard/trade'
     | '/api/public/notify-lead'
     | '/dashboard/admin/users'
+    | '/dashboard/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -138,11 +148,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
-    | '/dashboard/admin'
     | '/dashboard/homeowner'
     | '/dashboard/trade'
     | '/api/public/notify-lead'
     | '/dashboard/admin/users'
+    | '/dashboard/admin'
   id:
     | '__root__'
     | '/'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/trade'
     | '/api/public/notify-lead'
     | '/_authenticated/dashboard/admin/users'
+    | '/_authenticated/dashboard/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/dashboard/admin/': {
+      id: '/_authenticated/dashboard/admin/'
+      path: '/'
+      fullPath: '/dashboard/admin/'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/users': {
       id: '/_authenticated/dashboard/admin/users'
       path: '/users'
@@ -252,12 +270,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminUsersRoute: typeof AuthenticatedDashboardAdminUsersRoute
+  AuthenticatedDashboardAdminIndexRoute: typeof AuthenticatedDashboardAdminIndexRoute
 }
 
 const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
   {
     AuthenticatedDashboardAdminUsersRoute:
       AuthenticatedDashboardAdminUsersRoute,
+    AuthenticatedDashboardAdminIndexRoute:
+      AuthenticatedDashboardAdminIndexRoute,
   }
 
 const AuthenticatedDashboardAdminRouteWithChildren =
