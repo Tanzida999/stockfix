@@ -76,6 +76,7 @@ function TradeDashboard() {
     "there";
   const [active, setActive] = useState("overview");
   const [profile, setProfile] = useState<{ published: boolean; is_verified: boolean } | null>(null);
+  const [credentialCount, setCredentialCount] = useState<number | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
@@ -86,6 +87,14 @@ function TradeDashboard() {
       .eq("user_id", user.id)
       .maybeSingle();
     setProfile(((data as { published: boolean; is_verified: boolean } | null)) ?? null);
+  }, [user.id]);
+
+  const loadCredentials = useCallback(async () => {
+    const { count } = await supabase
+      .from("trade_credentials")
+      .select("id", { count: "exact", head: true })
+      .eq("trade_user_id", user.id);
+    setCredentialCount(count ?? 0);
   }, [user.id]);
 
   const loadLeads = useCallback(async () => {
@@ -101,8 +110,10 @@ function TradeDashboard() {
 
   useEffect(() => {
     loadProfile();
+    loadCredentials();
     loadLeads();
-  }, [loadProfile, loadLeads]);
+  }, [loadProfile, loadCredentials, loadLeads]);
+
 
   async function updateStatus(id: string, status: LeadStatus) {
     setLeads((ls) => ls.map((l) => (l.id === id ? { ...l, status } : l)));
