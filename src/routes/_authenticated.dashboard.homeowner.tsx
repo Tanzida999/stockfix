@@ -40,9 +40,6 @@ const navItems: NavItem[] = [
 ];
 
 function HomeownerDashboard() {
-  const { user } = Route.useRouteContext() as {
-    user: { email?: string; user_metadata?: { full_name?: string } };
-  };
   const { user, roles } = Route.useRouteContext() as {
     user: { email?: string; user_metadata?: { full_name?: string } };
     roles?: import("@/lib/supabase").AppRole[];
