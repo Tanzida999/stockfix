@@ -75,17 +75,17 @@ function TradeDashboard() {
     user.email?.split("@")[0] ||
     "there";
   const [active, setActive] = useState("overview");
-  const [profilePublished, setProfilePublished] = useState<boolean | null>(null);
+  const [profile, setProfile] = useState<{ published: boolean; is_verified: boolean } | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
   const loadProfile = useCallback(async () => {
     const { data } = await supabase
       .from("trade_profiles")
-      .select("published")
+      .select("published, is_verified")
       .eq("user_id", user.id)
       .maybeSingle();
-    setProfilePublished(((data as { published: boolean } | null)?.published) ?? false);
+    setProfile(((data as { published: boolean; is_verified: boolean } | null)) ?? null);
   }, [user.id]);
 
   const loadLeads = useCallback(async () => {
