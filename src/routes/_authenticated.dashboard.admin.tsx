@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Loader2, ShieldCheck, ExternalLink, LayoutDashboard } from "lucide-react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { Loader2, ShieldCheck, ExternalLink, LayoutDashboard, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { AppRole } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin")({
 
 const navItems: NavItem[] = [
   { key: "queue", label: "Verification queue", icon: LayoutDashboard },
+  { key: "users", label: "Manage users", icon: Users },
 ];
 
 type PendingCred = {
@@ -46,6 +47,7 @@ type PendingCred = {
 };
 
 function AdminPage() {
+  const navigate = useNavigate();
   const { user, roles } = Route.useRouteContext() as {
     user: { email?: string; user_metadata?: { full_name?: string } };
     roles?: AppRole[];
@@ -106,7 +108,9 @@ function AdminPage() {
       userName={name}
       navItems={navItems}
       activeKey="queue"
-      onNavigate={() => {}}
+      onNavigate={(key) => {
+        if (key === "users") navigate({ to: "/dashboard/admin/users" });
+      }}
     >
       <PageHeader
         title="Verification queue"
