@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { LogOut, Wrench } from "lucide-react";
+import { LogOut, Wrench, ShieldCheck } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +16,17 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
+import type { AppRole } from "@/lib/supabase";
+import { dashboardPathFor } from "@/lib/auth";
 
 export type NavItem = {
   key: string;
@@ -24,8 +34,18 @@ export type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
+export type DashboardRoleLabel = "Homeowner" | "Trade" | "Admin";
+
+const ROLE_TO_LABEL: Record<AppRole, DashboardRoleLabel> = {
+  homeowner: "Homeowner",
+  trade: "Trade",
+  admin: "Admin",
+};
+
 type Props = {
-  role: "Homeowner" | "Trade";
+  role: DashboardRoleLabel;
+  currentRole?: AppRole;
+  availableRoles?: AppRole[];
   userName: string;
   navItems: NavItem[];
   activeKey: string;
@@ -35,6 +55,8 @@ type Props = {
 
 export function DashboardLayout({
   role,
+  currentRole,
+  availableRoles = [],
   userName,
   navItems,
   activeKey,
@@ -42,10 +64,37 @@ export function DashboardLayout({
   children,
 }: Props) {
   const navigate = useNavigate();
+  const isAdmin = availableRoles.includes("admin");
+  const hasMultipleRoles = availableRoles.length > 1;
+  const activeRoleValue: AppRole =
+    currentRole ??
+    (role === "Admin" ? "admin" : role === "Trade" ? "trade" : "homeowner");
 
   async function logout() {
     await supabase.auth.signOut();
     navigate({ to: "/login", replace: true });
+  }
+
+  const showAdminNav = isAdmin && activeRoleValue !== "admin";
+  const mergedNav: NavItem[] = showAdminNav
+    ? [
+        ...navItems,
+        { key: "__admin__", label: "Admin", icon: ShieldCheck },
+      ]
+    : navItems;
+
+  function handleNav(key: string) {
+    if (key === "__admin__") {
+      navigate({ to: "/dashboard/admin" });
+      return;
+    }
+    onNavigate(key);
+  }
+
+  function handleRoleSwitch(next: string) {
+    const target = next as AppRole;
+    if (target === activeRoleValue) return;
+    navigate({ to: dashboardPathFor(target) });
   }
 
   const initials =
@@ -77,11 +126,11 @@ export function DashboardLayout({
               <SidebarGroupLabel>Menu</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navItems.map((item) => (
+                  {mergedNav.map((item) => (
                     <SidebarMenuItem key={item.key}>
                       <SidebarMenuButton
                         isActive={activeKey === item.key}
-                        onClick={() => onNavigate(item.key)}
+                        onClick={() => handleNav(item.key)}
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
@@ -103,10 +152,29 @@ export function DashboardLayout({
               </div>
               <span className="text-sm font-semibold sm:text-base">Stockfix</span>
             </div>
+            <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
+              {role} view
+            </Badge>
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              {hasMultipleRoles && (
+                <Select value={activeRoleValue} onValueChange={handleRoleSwitch}>
+                  <SelectTrigger className="h-8 w-[140px]">
+                    <SelectValue placeholder="Switch role" />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    {availableRoles.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {ROLE_TO_LABEL[r]} dashboard
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="hidden text-right sm:block">
                 <div className="text-sm font-medium leading-tight">{userName}</div>
-                <div className="text-xs text-muted-foreground leading-tight">{role}</div>
+                <div className="text-xs text-muted-foreground leading-tight">
+                  Viewing: {role}
+                </div>
               </div>
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>

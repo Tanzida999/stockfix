@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
-import { Loader2, ShieldCheck, ArrowLeft, ExternalLink } from "lucide-react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Loader2, ShieldCheck, ExternalLink, LayoutDashboard } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import type { AppRole } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  DashboardLayout,
+  type NavItem,
+} from "@/components/dashboard/dashboard-layout";
+import { PageHeader } from "@/components/dashboard/dashboard-primitives";
 import {
   CREDENTIAL_LABELS,
   type CredentialType,
@@ -14,13 +20,18 @@ import {
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   beforeLoad: ({ context }) => {
-    const role = (context as { role?: string }).role;
-    if (role !== "admin") {
+    const { role, roles } = context as { role?: string; roles?: string[] };
+    const all = roles ?? (role ? [role] : []);
+    if (!all.includes("admin")) {
       throw redirect({ to: "/dashboard/homeowner" });
     }
   },
   component: AdminPage,
 });
+
+const navItems: NavItem[] = [
+  { key: "queue", label: "Verification queue", icon: LayoutDashboard },
+];
 
 type PendingCred = {
   id: string;
@@ -35,6 +46,15 @@ type PendingCred = {
 };
 
 function AdminPage() {
+  const { user, roles } = Route.useRouteContext() as {
+    user: { email?: string; user_metadata?: { full_name?: string } };
+    roles?: AppRole[];
+  };
+  const name =
+    user.user_metadata?.full_name?.trim() ||
+    user.email?.split("@")[0] ||
+    "Admin";
+
   const [rows, setRows] = useState<PendingCred[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,50 +99,52 @@ function AdminPage() {
   }, [load]);
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 sm:px-6">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/dashboard/trade">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="ml-1">Back</span>
-            </Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold sm:text-xl">Admin — Verification queue</h1>
-          </div>
-        </div>
-      </header>
+    <DashboardLayout
+      role="Admin"
+      currentRole="admin"
+      availableRoles={roles ?? []}
+      userName={name}
+      navItems={navItems}
+      activeKey="queue"
+      onNavigate={() => {}}
+    >
+      <PageHeader
+        title="Verification queue"
+        description="Review submitted trade credentials and approve or reject them."
+      />
+      <div className="mb-4 flex items-center gap-2">
+        <ShieldCheck className="h-4 w-4 text-primary" />
+        <span className="text-sm text-muted-foreground">
+          Approving a required credential automatically marks the trade as verified.
+        </span>
+      </div>
 
-      <main className="mx-auto max-w-6xl space-y-4 px-4 py-6 sm:px-6 sm:py-10">
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>Couldn't load queue</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {loading ? (
-          <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-          </div>
-        ) : rows.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-16 text-center">
-              <p className="text-sm text-muted-foreground">
-                Nothing pending. All submitted credentials have been reviewed.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {rows.map((r) => (
-              <ReviewRow key={r.id} row={r} onDone={load} />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Couldn't load queue</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {loading ? (
+        <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+        </div>
+      ) : rows.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-16 text-center">
+            <p className="text-sm text-muted-foreground">
+              Nothing pending. All submitted credentials have been reviewed.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {rows.map((r) => (
+            <ReviewRow key={r.id} row={r} onDone={load} />
+          ))}
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
 

@@ -19,8 +19,15 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authenticated/dashboard/homeowner")({
   beforeLoad: ({ context }) => {
-    const role = (context as { role?: string }).role;
-    if (role === "trade") throw redirect({ to: "/dashboard/trade" });
+    const { role, roles } = context as {
+      role?: string;
+      roles?: string[];
+    };
+    const all = roles ?? (role ? [role] : []);
+    if (!all.includes("homeowner") && all.length > 0) {
+      if (all.includes("trade")) throw redirect({ to: "/dashboard/trade" });
+      if (all.includes("admin")) throw redirect({ to: "/dashboard/admin" });
+    }
   },
   component: HomeownerDashboard,
 });
@@ -33,8 +40,9 @@ const navItems: NavItem[] = [
 ];
 
 function HomeownerDashboard() {
-  const { user } = Route.useRouteContext() as {
+  const { user, roles } = Route.useRouteContext() as {
     user: { email?: string; user_metadata?: { full_name?: string } };
+    roles?: import("@/lib/supabase").AppRole[];
   };
   const name =
     user.user_metadata?.full_name?.trim() ||
@@ -45,6 +53,8 @@ function HomeownerDashboard() {
   return (
     <DashboardLayout
       role="Homeowner"
+      currentRole="homeowner"
+      availableRoles={roles ?? []}
       userName={name}
       navItems={navItems}
       activeKey={active}

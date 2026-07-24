@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
-import { fetchPrimaryRole, dashboardPathFor } from "@/lib/auth";
+import { fetchAllRoles, dashboardPathFor } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -28,8 +28,8 @@ function LoginPage() {
       setLoading(false);
       return;
     }
-    const role = await fetchPrimaryRole(data.user.id);
-    navigate({ to: dashboardPathFor(role) });
+    const roles = await fetchAllRoles(data.user.id);
+    navigate({ to: dashboardPathFor(roles[0] ?? null) });
   }
 
   return (
