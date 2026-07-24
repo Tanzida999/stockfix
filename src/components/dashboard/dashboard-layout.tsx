@@ -158,7 +158,7 @@ export function DashboardLayout({
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
               {hasMultipleRoles && (
                 <Select value={activeRoleValue} onValueChange={handleRoleSwitch}>
-                  <SelectTrigger size="sm" className="h-8 w-[140px]">
+                  <SelectTrigger className="h-8 w-[140px]">
                     <SelectValue placeholder="Switch role" />
                   </SelectTrigger>
                   <SelectContent align="end">
