@@ -1,19 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   MapPin,
   Loader2,
   SearchX,
-  Phone,
   ShieldCheck,
   Star,
+  ChevronDown,
   FileText,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LeadContactModal, type LeadMode } from "@/components/lead-contact-modal";
+import { InlineQuoteForm } from "@/components/inline-quote-form";
 
 type SearchParams = { category: string; postcode: string };
 
@@ -37,6 +39,13 @@ export const Route = createFileRoute("/search")({
         name: "description",
         content: "Find verified local tradespeople by category and postcode.",
       },
+      { property: "og:title", content: "Search verified trades — Stockfix" },
+      {
+        property: "og:description",
+        content: "Find verified local tradespeople by category and postcode.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: SearchPage,
@@ -55,11 +64,18 @@ type Result = {
   review_count: number;
 };
 
-type SortKey = "rating" | "reviewed" | "proximity";
+type SortKey = "rating" | "reviewed" | "nearest";
 type MinRating = "any" | "3" | "4" | "4.5";
 
 function SearchPage() {
   const { category, postcode } = Route.useSearch();
+  const navigate = useNavigate({ from: "/search" });
+
+  // Live inputs (immediate UI) + debounced values that drive the query.
+  const [categoryInput, setCategoryInput] = useState(category);
+  const [postcodeInput, setPostcodeInput] = useState(postcode);
+  const [debouncedPostcode, setDebouncedPostcode] = useState(postcode);
+
   const [loading, setLoading] = useState(true);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string | null>(null);
@@ -67,16 +83,10 @@ function SearchPage() {
   const [allCategories, setAllCategories] = useState<
     { id: string; name: string; slug: string }[]
   >([]);
-  const [contactTarget, setContactTarget] = useState<{
-    result: Result;
-    mode: LeadMode;
-  } | null>(null);
+  const [openQuoteFor, setOpenQuoteFor] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState<SortKey>("rating");
   const [minRating, setMinRating] = useState<MinRating>("any");
-  const [categoryFilter, setCategoryFilter] = useState<string>(category);
-
-  useEffect(() => setCategoryFilter(category), [category]);
 
   useEffect(() => {
     supabase
@@ -90,11 +100,40 @@ function SearchPage() {
       });
   }, []);
 
+  // Debounce postcode typing.
+  useEffect(() => {
+    const t = setTimeout(
+      () => setDebouncedPostcode(postcodeInput.trim().toUpperCase()),
+      300,
+    );
+    return () => clearTimeout(t);
+  }, [postcodeInput]);
+
+  // Keep the URL in sync (replace, so back button isn't flooded).
+  useEffect(() => {
+    if (categoryInput === category && debouncedPostcode === postcode) return;
+    navigate({
+      search: { category: categoryInput, postcode: debouncedPostcode },
+      replace: true,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryInput, debouncedPostcode]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const activeCategory = categoryFilter || category;
+      const activeCategory = categoryInput;
+      const activePostcode = debouncedPostcode;
+
+      if (!activeCategory || !activePostcode) {
+        setResults([]);
+        setCategoryId(null);
+        setCategoryName(null);
+        setLoading(false);
+        return;
+      }
+
       const catRes = await supabase
         .from("categories")
         .select("id, name, slug")
@@ -105,7 +144,7 @@ function SearchPage() {
       setCategoryName(cat?.name ?? null);
       setCategoryId(cat?.id ?? null);
 
-      if (!cat || !postcode) {
+      if (!cat) {
         setResults([]);
         setLoading(false);
         return;
@@ -125,7 +164,7 @@ function SearchPage() {
       const tpaRes = await supabase
         .from("trade_profile_areas")
         .select("trade_user_id")
-        .eq("outward_code", postcode);
+        .eq("outward_code", activePostcode);
       if (cancelled) return;
       const areaIds = new Set(
         ((tpaRes.data as { trade_user_id: string }[] | null) ?? []).map(
@@ -209,9 +248,7 @@ function SearchPage() {
     return () => {
       cancelled = true;
     };
-  }, [category, postcode, categoryFilter]);
-
-  const label = categoryName ?? categoryFilter;
+  }, [categoryInput, debouncedPostcode]);
 
   const displayed = useMemo(() => {
     let list = [...results];
@@ -220,52 +257,38 @@ function SearchPage() {
       list = list.filter((r) => (r.rating ?? 0) >= threshold);
     }
     list.sort((a, b) => {
-      if (sortBy === "rating") {
-        return (b.rating ?? 0) - (a.rating ?? 0);
-      }
-      if (sortBy === "reviewed") {
-        return b.review_count - a.review_count;
-      }
-      // proximity: exact postcode match first, then alphabetical area
-      const aExact = a.areas.includes(postcode) ? 0 : 1;
-      const bExact = b.areas.includes(postcode) ? 0 : 1;
+      if (sortBy === "rating") return (b.rating ?? 0) - (a.rating ?? 0);
+      if (sortBy === "reviewed") return b.review_count - a.review_count;
+      const aExact = a.areas.includes(debouncedPostcode) ? 0 : 1;
+      const bExact = b.areas.includes(debouncedPostcode) ? 0 : 1;
       return aExact - bExact;
     });
     return list;
-  }, [results, minRating, sortBy, postcode]);
+  }, [results, minRating, sortBy, debouncedPostcode]);
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 sm:px-6">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="ml-1">Back</span>
-            </Link>
-          </Button>
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold sm:text-xl">
-              {label ? `${label} in ${postcode || "your area"}` : "Search"}
+      <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4" />
+                <span className="ml-1 hidden sm:inline">Back</span>
+              </Link>
+            </Button>
+            <h1 className="truncate text-base font-semibold sm:text-lg">
+              Find a verified trade
             </h1>
-            <p className="text-xs text-muted-foreground">
-              Showing verified trades who cover this postcode district.
-            </p>
           </div>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-        {/* Filter / sort bar */}
-        <Card className="mb-4">
-          <CardContent className="grid gap-3 p-4 sm:grid-cols-3">
+          {/* Live search inputs */}
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Category
-              </label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Label className="text-xs text-muted-foreground">Trade</Label>
+              <Select value={categoryInput} onValueChange={setCategoryInput}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
+                  <SelectValue placeholder="Choose a trade" />
                 </SelectTrigger>
                 <SelectContent>
                   {allCategories.map((c) => (
@@ -277,14 +300,35 @@ function SearchPage() {
               </Select>
             </div>
             <div className="grid gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Minimum rating
-              </label>
+              <Label htmlFor="pc" className="text-xs text-muted-foreground">
+                Postcode district
+              </Label>
+              <Input
+                id="pc"
+                value={postcodeInput}
+                onChange={(e) => setPostcodeInput(e.target.value)}
+                placeholder="e.g. M15"
+                autoComplete="postal-code"
+                className="uppercase"
+              />
+            </div>
+          </div>
+
+          {/* Compact sort / filter row */}
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+            <span className="text-xs text-muted-foreground">
+              {loading
+                ? "Searching…"
+                : `${displayed.length} ${
+                    displayed.length === 1 ? "trade" : "trades"
+                  } found`}
+            </span>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
               <Select
                 value={minRating}
                 onValueChange={(v) => setMinRating(v as MinRating)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-8 w-[140px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -294,40 +338,37 @@ function SearchPage() {
                   <SelectItem value="4.5">4.5+ stars</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="grid gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Sort by
-              </label>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="rating">Rating (high to low)</SelectItem>
+                  <SelectItem value="rating">Top rated</SelectItem>
                   <SelectItem value="reviewed">Most reviewed</SelectItem>
-                  <SelectItem value="proximity">Postcode proximity</SelectItem>
+                  <SelectItem value="nearest">Nearest</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </header>
 
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         {loading ? (
           <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Searching…
           </div>
-        ) : !categoryFilter || !postcode ? (
+        ) : !categoryInput || !debouncedPostcode ? (
           <EmptyMessage
-            title="Add a category and postcode"
-            description="Head back to the homepage and pick a trade plus your postcode to search."
+            title="Pick a trade and postcode"
+            description="Choose a trade and type your postcode district above — results update as you go."
           />
         ) : displayed.length === 0 ? (
           <EmptyMessage
-            title={`No trades found in ${postcode}${
+            title={`No trades found in ${debouncedPostcode}${
               categoryName ? ` for ${categoryName}s` : ""
             } yet`}
-            description="Try loosening the filters, or check back soon — every listing is verified before it appears."
+            description="Try loosening the filters or a nearby postcode district — every listing is verified before it appears."
           />
         ) : (
           <div className="grid gap-4">
@@ -335,43 +376,36 @@ function SearchPage() {
               <ResultCard
                 key={r.user_id}
                 r={r}
-                onCallback={() => setContactTarget({ result: r, mode: "callback" })}
-                onQuote={() => setContactTarget({ result: r, mode: "quote" })}
+                categoryId={categoryId}
+                postcode={debouncedPostcode}
+                expanded={openQuoteFor === r.user_id}
+                onToggle={() =>
+                  setOpenQuoteFor((cur) => (cur === r.user_id ? null : r.user_id))
+                }
               />
             ))}
           </div>
         )}
       </main>
-
-      {contactTarget && (
-        <LeadContactModal
-          open={contactTarget !== null}
-          onOpenChange={(o) => {
-            if (!o) setContactTarget(null);
-          }}
-          tradeUserId={contactTarget.result.user_id}
-          tradeName={contactTarget.result.business_name || "this trade"}
-          categoryId={categoryId}
-          mode={contactTarget.mode}
-          defaultPostcode={postcode}
-        />
-      )}
     </div>
   );
 }
 
 function ResultCard({
   r,
-  onCallback,
-  onQuote,
+  categoryId,
+  postcode,
+  expanded,
+  onToggle,
 }: {
   r: Result;
-  onCallback: () => void;
-  onQuote: () => void;
+  categoryId: string | null;
+  postcode: string;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
-  const thumbs = r.portfolio_image_urls.slice(0, 4);
   return (
-    <Card className="transition hover:-translate-y-0.5 hover:shadow-md">
+    <Card className="transition hover:shadow-md">
       <CardContent className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -425,41 +459,41 @@ function ResultCard({
               </p>
             )}
 
-            {thumbs.length > 0 && (
-              <div className="mt-3 flex gap-2 overflow-hidden">
-                {thumbs.map((src, i) => (
-                  <div
-                    key={i}
-                    className="h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-muted sm:h-20 sm:w-20"
-                  >
-                    <img
-                      src={src}
-                      alt={`${r.business_name ?? "Trade"} portfolio ${i + 1}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
+            <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
               <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>Covers: {r.areas.join(", ") || "—"}</span>
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-2 sm:w-44">
-            <Button onClick={onQuote} className="w-full">
+          <div className="shrink-0 sm:w-48">
+            <Button
+              onClick={onToggle}
+              variant={expanded ? "outline" : "default"}
+              className="w-full"
+              aria-expanded={expanded}
+            >
               <FileText className="mr-2 h-4 w-4" />
               Request a quote
-            </Button>
-            <Button onClick={onCallback} variant="outline" className="w-full">
-              <Phone className="mr-2 h-4 w-4" />
-              Request callback
+              <ChevronDown
+                className={`ml-2 h-4 w-4 transition-transform ${
+                  expanded ? "rotate-180" : ""
+                }`}
+              />
             </Button>
           </div>
         </div>
+
+        {expanded && (
+          <div className="mt-4">
+            <InlineQuoteForm
+              tradeUserId={r.user_id}
+              tradeName={r.business_name || "this trade"}
+              categoryId={categoryId}
+              postcode={postcode}
+              onCancel={onToggle}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -484,9 +518,6 @@ function EmptyMessage({
             {description}
           </p>
         </div>
-        <Button asChild className="mt-2">
-          <Link to="/">Back to homepage</Link>
-        </Button>
       </CardContent>
     </Card>
   );
