@@ -9,6 +9,8 @@ import {
   Star,
   ChevronDown,
   FileText,
+  ClipboardList,
+  X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -25,13 +27,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { InlineQuoteForm } from "@/components/inline-quote-form";
+import { SearchEntryModal, LAST_POSTCODE_KEY } from "@/components/search-entry-modal";
 
-type SearchParams = { category: string; postcode: string };
+type SearchParams = {
+  category: string;
+  postcode: string;
+  job: string;
+  pcsaved: string;
+};
 
 export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): SearchParams => ({
     category: typeof search.category === "string" ? search.category : "",
     postcode: typeof search.postcode === "string" ? search.postcode : "",
+    job: typeof search.job === "string" ? search.job : "",
+    pcsaved: typeof search.pcsaved === "string" ? search.pcsaved : "",
   }),
   head: () => ({
     meta: [
@@ -65,11 +75,11 @@ type Result = {
   review_count: number;
 };
 
-type SortKey = "rating" | "reviewed" | "nearest";
+type SortKey = "relevant" | "rating" | "reviewed";
 type MinRating = "any" | "3" | "4" | "4.5";
 
 function SearchPage() {
-  const { category, postcode } = Route.useSearch();
+  const { category, postcode, job, pcsaved } = Route.useSearch();
   const navigate = useNavigate({ from: "/search" });
 
   // Live inputs — selecting a location resolves straight to an outward code.
@@ -87,7 +97,9 @@ function SearchPage() {
   >([]);
   const [openQuoteFor, setOpenQuoteFor] = useState<string | null>(null);
 
-  const [sortBy, setSortBy] = useState<SortKey>("rating");
+  const [sortBy, setSortBy] = useState<SortKey>("relevant");
+  const [drilldownOpen, setDrilldownOpen] = useState(false);
+  const [showPostcodeNotice, setShowPostcodeNotice] = useState(pcsaved === "1");
   const [minRating, setMinRating] = useState<MinRating>("any");
 
   useEffect(() => {
@@ -105,14 +117,29 @@ function SearchPage() {
   function handleLocationSelect(outcode: string, label: string) {
     setDebouncedPostcode(outcode.toUpperCase());
     setLocationLabel(label);
+    setShowPostcodeNotice(false);
+    try {
+      window.localStorage.setItem(LAST_POSTCODE_KEY, outcode.toUpperCase());
+    } catch {
+      /* ignore */
+    }
   }
+
+  useEffect(() => {
+    if (!debouncedPostcode) return;
+    try {
+      window.localStorage.setItem(LAST_POSTCODE_KEY, debouncedPostcode.toUpperCase());
+    } catch {
+      /* ignore */
+    }
+  }, [debouncedPostcode]);
 
 
   // Keep the URL in sync (replace, so back button isn't flooded).
   useEffect(() => {
     if (categoryInput === category && debouncedPostcode === postcode) return;
     navigate({
-      search: { category: categoryInput, postcode: debouncedPostcode },
+      search: { category: categoryInput, postcode: debouncedPostcode, job, pcsaved },
       replace: true,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,7 +287,8 @@ function SearchPage() {
       if (sortBy === "reviewed") return b.review_count - a.review_count;
       const aExact = a.areas.includes(debouncedPostcode) ? 0 : 1;
       const bExact = b.areas.includes(debouncedPostcode) ? 0 : 1;
-      return aExact - bExact;
+      if (aExact !== bExact) return aExact - bExact;
+      return (b.rating ?? 0) - (a.rating ?? 0);
     });
     return list;
   }, [results, minRating, sortBy, debouncedPostcode]);
@@ -341,9 +369,9 @@ function SearchPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="rating">Top rated</SelectItem>
+                  <SelectItem value="relevant">Most relevant</SelectItem>
+                  <SelectItem value="rating">Highest rated</SelectItem>
                   <SelectItem value="reviewed">Most reviewed</SelectItem>
-                  <SelectItem value="nearest">Nearest</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -352,6 +380,47 @@ function SearchPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        {showPostcodeNotice && debouncedPostcode && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border bg-background p-3 text-sm shadow-sm">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <p className="flex-1">
+              Postcode used from your last search. Make sure it&apos;s where the
+              project&apos;s needed!
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowPostcodeNotice(false)}
+              className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10">
+                <ClipboardList className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold">Describe your job</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {job
+                    ? job
+                    : "Answer a few quick questions and we'll match you with verified local trades."}
+                </p>
+              </div>
+            </div>
+            <Button className="shrink-0" onClick={() => setDrilldownOpen(true)}>
+              Request quotes
+            </Button>
+          </CardContent>
+        </Card>
+
+        <SearchEntryModal open={drilldownOpen} onOpenChange={setDrilldownOpen} />
+
         {loading ? (
           <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Searching…
@@ -376,6 +445,7 @@ function SearchPage() {
                 r={r}
                 categoryId={categoryId}
                 postcode={debouncedPostcode}
+                job={job}
                 expanded={openQuoteFor === r.user_id}
                 onToggle={() =>
                   setOpenQuoteFor((cur) => (cur === r.user_id ? null : r.user_id))
@@ -393,12 +463,14 @@ function ResultCard({
   r,
   categoryId,
   postcode,
+  job,
   expanded,
   onToggle,
 }: {
   r: Result;
   categoryId: string | null;
   postcode: string;
+  job: string;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -488,6 +560,7 @@ function ResultCard({
               tradeName={r.business_name || "this trade"}
               categoryId={categoryId}
               postcode={postcode}
+              initialDescription={job}
               onCancel={onToggle}
             />
           </div>
