@@ -25,6 +25,7 @@ type Props = {
   tradeName: string;
   categoryId?: string | null;
   postcode?: string;
+  initialDescription?: string;
   onCancel: () => void;
 };
 
@@ -33,12 +34,13 @@ export function InlineQuoteForm({
   tradeName,
   categoryId,
   postcode = "",
+  initialDescription = "",
   onCancel,
 }: Props) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
+  const [jobDescription, setJobDescription] = useState(initialDescription);
   const [urgency, setUrgency] = useState<string>("soon");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
