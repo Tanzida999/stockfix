@@ -152,7 +152,7 @@ function SearchPage() {
       const activeCategory = categoryInput;
       const activePostcode = debouncedPostcode;
 
-      if (!activeCategory || !activePostcode) {
+      if (!activeCategory) {
         setResults([]);
         setCategoryId(null);
         setCategoryName(null);
@@ -187,23 +187,27 @@ function SearchPage() {
         ),
       );
 
-      const tpaRes = await supabase
-        .from("trade_profile_areas")
-        .select("trade_user_id")
-        .eq("outward_code", activePostcode);
-      if (cancelled) return;
-      const areaIds = new Set(
-        ((tpaRes.data as { trade_user_id: string }[] | null) ?? []).map(
-          (r) => r.trade_user_id,
-        ),
-      );
+      let ids = Array.from(catIds);
+      if (activePostcode) {
+        const tpaRes = await supabase
+          .from("trade_profile_areas")
+          .select("trade_user_id")
+          .eq("outward_code", activePostcode);
+        if (cancelled) return;
+        const areaIds = new Set(
+          ((tpaRes.data as { trade_user_id: string }[] | null) ?? []).map(
+            (r) => r.trade_user_id,
+          ),
+        );
+        ids = ids.filter((id) => areaIds.has(id));
+      }
 
-      const ids = Array.from(catIds).filter((id) => areaIds.has(id));
       if (ids.length === 0) {
         setResults([]);
         setLoading(false);
         return;
       }
+
 
       const profilesRes = await supabase
         .from("trade_profiles")
