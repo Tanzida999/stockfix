@@ -71,10 +71,11 @@ function SearchPage() {
   const { category, postcode } = Route.useSearch();
   const navigate = useNavigate({ from: "/search" });
 
-  // Live inputs (immediate UI) + debounced values that drive the query.
+  // Live inputs — selecting a location resolves straight to an outward code.
   const [categoryInput, setCategoryInput] = useState(category);
-  const [postcodeInput, setPostcodeInput] = useState(postcode);
   const [debouncedPostcode, setDebouncedPostcode] = useState(postcode);
+  const [locationLabel, setLocationLabel] = useState(postcode);
+
 
   const [loading, setLoading] = useState(true);
   const [categoryId, setCategoryId] = useState<string | null>(null);
