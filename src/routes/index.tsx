@@ -87,7 +87,7 @@ function Landing() {
     <div className="min-h-screen bg-[oklch(0.985_0.01_75)] text-foreground">
       <Header />
       <main>
-        <Hero categories={categories} />
+        <Hero />
         <PopularTrades categories={categories} />
         <TrustSection />
         <HowItWorks />
