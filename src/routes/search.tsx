@@ -152,7 +152,7 @@ function SearchPage() {
       const activeCategory = categoryInput;
       const activePostcode = debouncedPostcode;
 
-      if (!activeCategory || !activePostcode) {
+      if (!activeCategory) {
         setResults([]);
         setCategoryId(null);
         setCategoryName(null);
@@ -187,23 +187,27 @@ function SearchPage() {
         ),
       );
 
-      const tpaRes = await supabase
-        .from("trade_profile_areas")
-        .select("trade_user_id")
-        .eq("outward_code", activePostcode);
-      if (cancelled) return;
-      const areaIds = new Set(
-        ((tpaRes.data as { trade_user_id: string }[] | null) ?? []).map(
-          (r) => r.trade_user_id,
-        ),
-      );
+      let ids = Array.from(catIds);
+      if (activePostcode) {
+        const tpaRes = await supabase
+          .from("trade_profile_areas")
+          .select("trade_user_id")
+          .eq("outward_code", activePostcode);
+        if (cancelled) return;
+        const areaIds = new Set(
+          ((tpaRes.data as { trade_user_id: string }[] | null) ?? []).map(
+            (r) => r.trade_user_id,
+          ),
+        );
+        ids = ids.filter((id) => areaIds.has(id));
+      }
 
-      const ids = Array.from(catIds).filter((id) => areaIds.has(id));
       if (ids.length === 0) {
         setResults([]);
         setLoading(false);
         return;
       }
+
 
       const profilesRes = await supabase
         .from("trade_profiles")
@@ -425,18 +429,23 @@ function SearchPage() {
           <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Searching…
           </div>
-        ) : !categoryInput || !debouncedPostcode ? (
+        ) : !categoryInput ? (
           <EmptyMessage
-            title="Pick a trade and postcode"
-            description="Choose a trade and type your postcode district above — results update as you go."
+            title="Pick a trade to get started"
+            description="Choose a trade above — results update as you go, and you can narrow by location any time."
           />
         ) : displayed.length === 0 ? (
           <EmptyMessage
-            title={`No trades found in ${debouncedPostcode}${
-              categoryName ? ` for ${categoryName}s` : ""
+            title={`No verified ${categoryName ? `${categoryName}s` : "trades"} found${
+              debouncedPostcode ? ` in ${debouncedPostcode}` : ""
             } yet`}
-            description="Try loosening the filters or a nearby postcode district — every listing is verified before it appears."
+            description={
+              debouncedPostcode
+                ? "Try loosening the filters or a nearby location — every listing is verified before it appears."
+                : "Try loosening the filters — every listing is verified before it appears."
+            }
           />
+
         ) : (
           <div className="grid gap-4">
             {displayed.map((r) => (
