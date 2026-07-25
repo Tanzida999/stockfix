@@ -101,14 +101,11 @@ function SearchPage() {
       });
   }, []);
 
-  // Debounce postcode typing.
-  useEffect(() => {
-    const t = setTimeout(
-      () => setDebouncedPostcode(postcodeInput.trim().toUpperCase()),
-      300,
-    );
-    return () => clearTimeout(t);
-  }, [postcodeInput]);
+  function handleLocationSelect(outcode: string, label: string) {
+    setDebouncedPostcode(outcode.toUpperCase());
+    setLocationLabel(label);
+  }
+
 
   // Keep the URL in sync (replace, so back button isn't flooded).
   useEffect(() => {
