@@ -181,39 +181,8 @@ function Header() {
   );
 }
 
-function Hero({ categories }: { categories: LiveCategory[] }) {
-  const [category, setCategory] = useState<string>("");
-  const [postcode, setPostcode] = useState("");
-  const [postcodeError, setPostcodeError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!category && categories.length > 0) setCategory(categories[0].slug);
-  }, [categories, category]);
-
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setPostcodeError(null);
-    if (!postcode.trim()) {
-      setPostcodeError("Please enter a postcode.");
-      return;
-    }
-    setSubmitting(true);
-    const { data, error } = await supabase.rpc("normalise_outward", {
-      input: postcode,
-    });
-    setSubmitting(false);
-    if (error || !data) {
-      setPostcodeError(
-        "We don't recognise that postcode — please check and try again.",
-      );
-      return;
-    }
-    const params = new URLSearchParams();
-    if (category) params.set("category", category);
-    params.set("postcode", data);
-    window.location.href = `/search?${params.toString()}`;
-  };
+function Hero() {
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <section className="relative overflow-hidden">
@@ -236,58 +205,27 @@ function Hero({ categories }: { categories: LiveCategory[] }) {
           </p>
         </div>
 
-        <form
-          onSubmit={onSubmit}
-          className="mx-auto mt-8 w-full max-w-3xl rounded-2xl border border-black/5 bg-white p-3 shadow-xl shadow-[oklch(0.55_0.17_40_/_0.08)] sm:mt-10 sm:p-4"
-        >
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] sm:gap-2">
-            <div className="flex items-center gap-2 rounded-lg border border-input px-3 sm:border-0 sm:border-r sm:border-input sm:rounded-none sm:pr-3">
-              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="h-11 w-full border-0 bg-transparent px-0 shadow-none focus:ring-0 focus-visible:ring-0">
-                  <SelectValue placeholder="What do you need?" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2 rounded-lg border border-input px-3 sm:border-0 sm:rounded-none">
-              <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <Input
-                value={postcode}
-                onChange={(e) => {
-                  setPostcode(e.target.value);
-                  if (postcodeError) setPostcodeError(null);
-                }}
-                placeholder="Postcode"
-                className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-                aria-label="Postcode"
-                aria-invalid={postcodeError ? true : undefined}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="h-11 gap-2 bg-[oklch(0.62_0.16_45)] px-6 text-white hover:bg-[oklch(0.56_0.16_45)] sm:h-auto"
-            >
-              <Search className="h-4 w-4" />
-              {submitting ? "Checking…" : "Search"}
-            </Button>
-          </div>
-          {postcodeError && (
-            <p className="mt-3 px-1 text-sm text-[oklch(0.5_0.18_25)]" role="alert">
-              {postcodeError}
-            </p>
-          )}
-        </form>
+        <div className="mx-auto mt-8 w-full max-w-3xl sm:mt-10">
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="group flex w-full items-center gap-3 rounded-2xl border border-black/5 bg-white p-4 text-left shadow-xl shadow-[oklch(0.55_0.17_40_/_0.08)] transition hover:shadow-2xl sm:p-5"
+            aria-label="Open search"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[oklch(0.96_0.04_60)] text-[oklch(0.55_0.17_40)]">
+              <Search className="h-5 w-5" />
+            </span>
+            <span className="flex-1 text-sm text-muted-foreground sm:text-base">
+              Describe your project — e.g. leaking radiator, kitchen rewire…
+            </span>
+            <span className="hidden shrink-0 rounded-full bg-[oklch(0.62_0.16_45)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm sm:inline-block">
+              Search
+            </span>
+          </button>
+        </div>
       </div>
+
+      <SearchEntryModal open={modalOpen} onOpenChange={setModalOpen} />
     </section>
   );
 }
