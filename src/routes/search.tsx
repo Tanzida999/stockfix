@@ -14,8 +14,9 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
+
 import {
   Select,
   SelectContent,
@@ -71,10 +72,11 @@ function SearchPage() {
   const { category, postcode } = Route.useSearch();
   const navigate = useNavigate({ from: "/search" });
 
-  // Live inputs (immediate UI) + debounced values that drive the query.
+  // Live inputs — selecting a location resolves straight to an outward code.
   const [categoryInput, setCategoryInput] = useState(category);
-  const [postcodeInput, setPostcodeInput] = useState(postcode);
   const [debouncedPostcode, setDebouncedPostcode] = useState(postcode);
+  const [locationLabel, setLocationLabel] = useState(postcode);
+
 
   const [loading, setLoading] = useState(true);
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -100,14 +102,11 @@ function SearchPage() {
       });
   }, []);
 
-  // Debounce postcode typing.
-  useEffect(() => {
-    const t = setTimeout(
-      () => setDebouncedPostcode(postcodeInput.trim().toUpperCase()),
-      300,
-    );
-    return () => clearTimeout(t);
-  }, [postcodeInput]);
+  function handleLocationSelect(outcode: string, label: string) {
+    setDebouncedPostcode(outcode.toUpperCase());
+    setLocationLabel(label);
+  }
+
 
   // Keep the URL in sync (replace, so back button isn't flooded).
   useEffect(() => {
@@ -301,17 +300,16 @@ function SearchPage() {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="pc" className="text-xs text-muted-foreground">
-                Postcode district
+                Location
               </Label>
-              <Input
+              <LocationAutocomplete
                 id="pc"
-                value={postcodeInput}
-                onChange={(e) => setPostcodeInput(e.target.value)}
-                placeholder="e.g. M15"
-                autoComplete="postal-code"
-                className="uppercase"
+                value={debouncedPostcode}
+                displayValue={locationLabel}
+                onSelect={handleLocationSelect}
               />
             </div>
+
           </div>
 
           {/* Compact sort / filter row */}
