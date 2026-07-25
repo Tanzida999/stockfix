@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type ComponentType, type FormEvent } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import {
   Wrench,
   Zap,
@@ -15,14 +15,6 @@ import {
   Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -30,6 +22,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { SearchEntryModal } from "@/components/search-entry-modal";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
