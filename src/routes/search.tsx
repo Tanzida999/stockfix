@@ -299,17 +299,16 @@ function SearchPage() {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="pc" className="text-xs text-muted-foreground">
-                Postcode district
+                Location
               </Label>
-              <Input
+              <LocationAutocomplete
                 id="pc"
-                value={postcodeInput}
-                onChange={(e) => setPostcodeInput(e.target.value)}
-                placeholder="e.g. M15"
-                autoComplete="postal-code"
-                className="uppercase"
+                value={debouncedPostcode}
+                displayValue={locationLabel}
+                onSelect={handleLocationSelect}
               />
             </div>
+
           </div>
 
           {/* Compact sort / filter row */}
