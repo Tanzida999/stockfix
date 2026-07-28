@@ -146,6 +146,44 @@ export function LocationAutocomplete({
     };
   }, [query]);
 
+  // Validate free-typed text as a full UK postcode via postcodes.io on submit.
+  async function submitTyped() {
+    const q = query.trim();
+    if (!q) return;
+    setError(null);
+    setValidating(true);
+    try {
+      const res = await fetch(
+        `https://api.postcodes.io/postcodes/${encodeURIComponent(q)}`,
+      );
+      if (res.status === 404) {
+        setError("We couldn't find that postcode. Check it and try again.");
+        return;
+      }
+      if (!res.ok) {
+        setError("Couldn't check that postcode right now — try again.");
+        return;
+      }
+      const json = (await res.json()) as {
+        result: { outcode: string; admin_district: string | null } | null;
+      };
+      const hit = json.result;
+      if (!hit) {
+        setError("We couldn't find that postcode. Check it and try again.");
+        return;
+      }
+      skipNextFetch.current = true;
+      setQuery(hit.outcode.toUpperCase());
+      setOpen(false);
+      setSuggestions([]);
+      onSelect(hit.outcode.toUpperCase(), hit.admin_district ?? hit.outcode);
+    } catch {
+      setError("Couldn't check that postcode right now — try again.");
+    } finally {
+      setValidating(false);
+    }
+  }
+
   function choose(s: LocationSuggestion) {
     skipNextFetch.current = true;
     setQuery(s.label);
