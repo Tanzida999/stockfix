@@ -251,6 +251,13 @@ export function LocationAutocomplete({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setOpen(true)}
             onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const s = showList ? suggestions[highlight] : undefined;
+                if (s) choose(s);
+                else void submitTyped();
+                return;
+              }
               if (!showList) return;
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -258,12 +265,6 @@ export function LocationAutocomplete({
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 setHighlight((h) => Math.max(h - 1, 0));
-              } else if (e.key === "Enter") {
-                const s = suggestions[highlight];
-                if (s) {
-                  e.preventDefault();
-                  choose(s);
-                }
               } else if (e.key === "Escape") {
                 setOpen(false);
               }
