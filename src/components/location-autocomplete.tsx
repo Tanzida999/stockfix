@@ -86,6 +86,7 @@ export function LocationAutocomplete({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [highlight, setHighlight] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -145,6 +146,44 @@ export function LocationAutocomplete({
       clearTimeout(t);
     };
   }, [query]);
+
+  // Validate free-typed text as a full UK postcode via postcodes.io on submit.
+  async function submitTyped() {
+    const q = query.trim();
+    if (!q) return;
+    setError(null);
+    setValidating(true);
+    try {
+      const res = await fetch(
+        `https://api.postcodes.io/postcodes/${encodeURIComponent(q)}`,
+      );
+      if (res.status === 404) {
+        setError("We couldn't find that postcode. Check it and try again.");
+        return;
+      }
+      if (!res.ok) {
+        setError("Couldn't check that postcode right now — try again.");
+        return;
+      }
+      const json = (await res.json()) as {
+        result: { outcode: string; admin_district: string | null } | null;
+      };
+      const hit = json.result;
+      if (!hit) {
+        setError("We couldn't find that postcode. Check it and try again.");
+        return;
+      }
+      skipNextFetch.current = true;
+      setQuery(hit.outcode.toUpperCase());
+      setOpen(false);
+      setSuggestions([]);
+      onSelect(hit.outcode.toUpperCase(), hit.admin_district ?? hit.outcode);
+    } catch {
+      setError("Couldn't check that postcode right now — try again.");
+    } finally {
+      setValidating(false);
+    }
+  }
 
   function choose(s: LocationSuggestion) {
     skipNextFetch.current = true;
@@ -212,6 +251,13 @@ export function LocationAutocomplete({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setOpen(true)}
             onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const s = showList ? suggestions[highlight] : undefined;
+                if (s) choose(s);
+                else void submitTyped();
+                return;
+              }
               if (!showList) return;
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -219,12 +265,6 @@ export function LocationAutocomplete({
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 setHighlight((h) => Math.max(h - 1, 0));
-              } else if (e.key === "Enter") {
-                const s = suggestions[highlight];
-                if (s) {
-                  e.preventDefault();
-                  choose(s);
-                }
               } else if (e.key === "Escape") {
                 setOpen(false);
               }
@@ -236,7 +276,7 @@ export function LocationAutocomplete({
             aria-autocomplete="list"
             className="pl-9"
           />
-          {loading && (
+          {(loading || validating) && (
             <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
           )}
         </div>
